@@ -7,21 +7,42 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 
 export default async function EventsPage() {
-  const events = await safeQuery(
-    () =>
-      prisma.event.findMany({
-        where: { isActive: true },
-        include: { exchange: true },
-        orderBy: { createdAt: "desc" },
-      }),
-    []
-  );
+  let events: Array<{
+    id: string;
+    title: string;
+    description: string;
+    bannerUrl: string | null;
+    link: string | null;
+    exchange: {
+      name: string;
+    };
+  }> = [];
+  
+  try {
+    events = await safeQuery(
+      () =>
+        prisma.event.findMany({
+          where: { isActive: true },
+          include: { exchange: true },
+          orderBy: { createdAt: "desc" },
+        }),
+      []
+    );
+  } catch (error) {
+    console.error("❌ 이벤트 데이터 로드 실패:", error);
+    events = [];
+  }
 
   return (
     <section className="container mx-auto px-4 py-10">
       <h2 className="mb-6 text-2xl font-bold">이벤트</h2>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {events.map((ev) => (
+      {events.length === 0 ? (
+        <div className="text-center py-10 text-muted-foreground">
+          진행 중인 이벤트가 없습니다.
+        </div>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {events.map((ev) => (
           <Card key={ev.id} className="overflow-hidden">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -43,8 +64,9 @@ export default async function EventsPage() {
               ) : null}
             </CardFooter>
           </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

@@ -17,11 +17,6 @@ if (process.env.NODE_ENV !== "production") {
   global.prismaGlobal = prisma;
 }
 
-// 프로덕션 환경에서도 연결을 안전하게 관리
-if (process.env.NODE_ENV === "production") {
-  prisma.$connect().catch((error) => {
-    console.error("❌ Prisma 연결 실패:", error);
-  });
-}
+// 서버리스 환경에서는 연결을 미리 열지 않음 (쿼리 시 자동 연결)
 
 
