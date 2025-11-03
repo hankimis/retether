@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Access control
+enum Role {
+  USER
+  OPERATOR
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String?  // 비밀번호 (해시된 값)
+  name      String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+
+  // NextAuth relations
+  accounts  Account[]
+  sessions  Session[]
+
+  // Domain relations
+  // (none currently)
+}
+
+// NextAuth models (compatible with Prisma Adapter)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?  @db.Text
+  access_token      String?  @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?  @db.Text
+  session_state     String?
+  refresh_token_expires_in Int?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Exchange {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  paybackRate Int
+  logoUrl     String?
+  partnerUrl  String?
+  isNew       Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  events      Event[]
+  paybackRule PaybackRule?
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  exchangeId  String
+  exchange    Exchange @relation(fields: [exchangeId], references: [id])
+  periodStart DateTime?
+  periodEnd   DateTime?
+  bannerUrl   String?
+  link        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PaybackRule {
+  id            String   @id @default(cuid())
+  exchangeId    String   @unique
+  baseRate      Float    @default(0.0)
+  partnerShare  Float    @default(0.7)
+  floorAmount   Int?
+  updatedAt     DateTime @updatedAt
+
+  exchange Exchange @relation(fields: [exchangeId], references: [id])
+}
