@@ -6,8 +6,9 @@ import EditEventForm from "./ui";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export default async function EditEventPage({ params }: { params: { id: string } }) {
-  const ev = await safeQuery(() => prisma.event.findUnique({ where: { id: params.id } }), null);
+export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const ev = await safeQuery(() => prisma.event.findUnique({ where: { id } }), null);
   if (!ev) return notFound();
   const initial = {
     ...ev,

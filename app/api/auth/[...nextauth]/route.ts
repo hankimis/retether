@@ -21,6 +21,7 @@ const handler = NextAuth({
             return null;
           }
 
+          // @ts-ignore - password 필드는 Prisma 스키마에 있지만 타입에 반영되지 않을 수 있음
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
             select: {
@@ -30,7 +31,7 @@ const handler = NextAuth({
               role: true,
               password: true, // 명시적으로 password 필드 선택
             },
-          });
+          }) as { id: string; email: string; name: string | null; role: "USER" | "OPERATOR" | "ADMIN"; password: string | null } | null;
 
           if (!user) {
             console.log(`❌ 사용자를 찾을 수 없음: ${credentials.email}`);

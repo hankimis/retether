@@ -6,8 +6,9 @@ import EditForm from "./ui";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export default async function EditExchangePage({ params }: { params: { id: string } }) {
-  const ex = await safeQuery(() => prisma.exchange.findUnique({ where: { id: params.id } }), null);
+export default async function EditExchangePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const ex = await safeQuery(() => prisma.exchange.findUnique({ where: { id } }), null);
   if (!ex) return notFound();
   return <EditForm initial={ex} />;
 }
