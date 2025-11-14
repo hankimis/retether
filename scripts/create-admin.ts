@@ -1,3 +1,9 @@
+import { config } from "dotenv";
+import { resolve } from "path";
+
+// .env 파일 로드
+config({ path: resolve(process.cwd(), ".env") });
+
 import { PrismaClient } from "../app/generated/prisma/client";
 
 const prisma = new PrismaClient();
